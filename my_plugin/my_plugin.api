@@ -1,0 +1,54 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   my_plugin.api
+
+   VPP API definition file.
+   Defines messages you can send to VPP at runtime to control the plugin.
+
+   These messages can be sent via:
+     - vppctl (the VPP CLI)
+     - vpp-api-test
+     - Any program using the VPP API library
+
+   After modifying this file, regenerate the C bindings by running:
+     vppapigen --input my_plugin.api --output my_plugin.api.h
+   ───────────────────────────────────────────────────────────────────────────── */
+
+// Required header that all VPP API files must include
+option version = "1.0.0";
+
+// ── Message: set_tap_name ──────────────────────────────────────────────────
+// Lets you change which TAP interface the plugin reads from at runtime.
+// Send this message, then the plugin will reopen the TAP with the new name.
+
+// Request message (client → VPP)
+autoreply define my_plugin_set_tap_name
+{
+    // Standard VPP message header fields (required in every message)
+    u32 client_index;   // identifies which API client is sending this
+    u32 context;        // lets the client match replies to requests
+
+    // Our custom field: the new TAP interface name (e.g. "mytap1")
+    string tap_name[64];
+};
+
+// ── Message: get_stats ────────────────────────────────────────────────────
+// Request the plugin to report its packet statistics.
+
+// Request message (client → VPP)
+define my_plugin_get_stats
+{
+    u32 client_index;
+    u32 context;
+};
+
+// Reply message (VPP → client)
+define my_plugin_get_stats_reply
+{
+    u32 context;
+    i32 retval;            // 0 = success, negative = error code
+
+    // Our custom reply fields
+    u64 total_rx_packets;  // total packets read from TAP since startup
+    string tap_name[64];   // current TAP interface name
+    bool tap_is_open;      // true if the TAP fd is currently open
+};
